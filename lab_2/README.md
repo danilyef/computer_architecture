@@ -35,11 +35,23 @@ iverilog -o exercise_2 exercise_2.v -s testbench3 && vvp exercise_2
 ### Exercise 3: 1-Bit Full Adder
 Implement a structural 1-bit full adder with carry-in and carry-out.
 
+See [theoretical part](theoretical%20part.md) for the truth table and derived boolean equations.
+
 ```verilog
 module FullAdder (input a, input b, input ci, output s, output co);
     // Implement structural logic (gates) here
 endmodule
 ```
 
+**Solution:**
+```bash
+iverilog -o exercise_3 exercise_3.v -s testbench1 && vvp exercise_3
+```
+
 ### Exercise 4: 4-Bit Ripple-Carry Adder
 Chain four `FullAdder` instances to build a 4-bit adder, propagating carry between stages.
+
+**Solution:**
+```bash
+iverilog -o exercise_4 exercise_4.v -s testbench1 && vvp exercise_4
+```
