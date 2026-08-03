@@ -1,19 +1,19 @@
-### Aanjhan Ranganathan <raanjhan@inf.ethz.ch>
-### For Lab 8 Digital Technik 
-### 2014
-
-###   I/O addresses Reference
-###  compatible to the compact modelling
-###  0x00007FF0   LED output
 
 .data
 pattern: .word 0x00200000,0x00004000,0x00000080,0x00000001,0x00000002,0x00000004,0x00000008,0x00000400,0x00020000,0x01000000,0x02000000,0x04000000
-loopcnt: .word 0x001e8484
-
-.text
-   lw $t3, loopcnt    # initialize a  large loopcounter (so that the snake does not crawl SUPERFAST)
-   addi $t5,$0,48       # initialize the length of the display pattern (in bytes)
+speeds:  .word 2000000, 1000000, 500000, 250000
    
+
+.text      
+   addi $t5,$0,48       # initialize the length of the display pattern (in bytes)
+   lw $t3, 0x7ff4($0)   # read the 2-bit speed step from the switches (MMIO input)
+
+   add $t3, $t3, $t3       
+   add $t3, $t3, $t3    # because offset is in bytes -> we need * 4
+
+   add $t3, $t5, $t3    # correct offset for the speeds
+   lw $t3, 0($t3)  # load the value of the speeds
+
 restart:   
    addi $t4,$0,0
 

@@ -2,13 +2,14 @@
 #
 # Simulate the MIPS processor with Icarus Verilog -- no FPGA needed.
 #
-#   ./sim/run.sh              run both testbenches
-#   ./sim/run.sh snake        run only the snake program test
-#   ./sim/run.sh aluctrl      run only the ALU/control decode test
-#   ./sim/run.sh snake +vcd   also dump sim/snake.vcd for GTKWave
+#   ./sim/run.sh              run all testbenches
+#   ./sim/run.sh snake        Part 1: the snake program on MIPS
+#   ./sim/run.sh aluctrl      Part 1: ALU / control decode
+#   ./sim/run.sh top          Part 2: whole board incl. the SWITCH input
+#   ./sim/run.sh snake +vcd   also dump a .vcd for GTKWave
 #
 # Extra +plusargs are passed straight through, e.g.
-#   ./sim/run.sh snake +loopcnt=5 +writes=48 +vcd
+#   ./sim/run.sh top +switch=3 +loopcnt=5 +vcd
 #
 set -u
 
@@ -17,6 +18,7 @@ set -u
 cd "$(dirname "$0")/.." || exit 1
 
 RTL="MIPS.v ALU.v ControlUnit.v DataMemory.v InstructionMemory.v RegisterFile.v reg_half.v"
+RTL="$RTL top.v clockdiv.v"
 STUB="sim/dist_mem_stub.v"
 
 if ! command -v iverilog >/dev/null 2>&1; then
@@ -27,7 +29,7 @@ fi
 # Two harmless diagnostics from the *provided* files are filtered out:
 #   - "dangling input port" : reg_half.v leaves the unused DIST_MEM_GEN ports open
 #   - "1364-2005 standard"  : $readmemh into a [N:0] array in the memory modules
-NOISE='dangling input port|1364-2005 standard'
+NOISE='dangling input port|1364-2005 standard|timescale for clockdiv|inherited timescale is here'
 
 # shellcheck disable=SC2086
 build_and_run() {
@@ -46,9 +48,11 @@ status=0
 case "${1:-all}" in
   snake)   shift || true; build_and_run tb_snake   "$@" || status=1 ;;
   aluctrl) shift || true; build_and_run tb_aluctrl "$@" || status=1 ;;
+  top)     shift || true; build_and_run tb_top     "$@" || status=1 ;;
   all|"")  build_and_run tb_aluctrl || status=1
-           build_and_run tb_snake   || status=1 ;;
-  *)       echo "unknown target '$1' (use: snake | aluctrl | all)"; exit 1 ;;
+           build_and_run tb_snake   || status=1
+           build_and_run tb_top     || status=1 ;;
+  *)       echo "unknown target '$1' (use: snake | aluctrl | top | all)"; exit 1 ;;
 esac
 
 exit $status

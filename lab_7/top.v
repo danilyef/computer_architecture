@@ -22,9 +22,10 @@ module top(
         input             FPGACLK,
         // TODO PART II for Lab 8
         // add input port to read the switch value for speed control of the snake
+      input      [1:0]  SWITCH, 
 		  input             RESET,
 		  output     [6:0]  LED,
-	     output reg [3:0]  AN
+	    output reg [3:0]  AN
     );
 
 // Define internal signals
@@ -42,10 +43,6 @@ module top(
                                // The counter is large to allow enough time
                                // for each LED to fully light up. 
                                // we could probably increase it a bit further
-
-// Signals for composing the input
-  wire  [1:0]  IOin;           // output of the multiplexer
-
 
 // Instantiate an internal clock divider that will 
 // take the 50 MHz FPGA clock and divide it by 5 so that
@@ -84,7 +81,7 @@ clockdiv ClockDiv (
    // Create the 32 bit IOReadData based on IOAddr value. Remember IOAddr is a 4-bit
    // value.
     
-   // assign IOReadData = ;
+   assign IOReadData = (IOAddr == 4'b0100) ? {30'b0, SWITCH} : 32'bx;
 
 
 // Register to save the 28-bit Value

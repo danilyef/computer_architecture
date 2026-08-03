@@ -10,14 +10,16 @@ This repository contains the files and instructions for Lab 7, where we assemble
 * Run a simple assembly program to display a looping "snake" on the 7-segment LED display.
 
 ## File Structure
-* **`top.v` / `top.xdc`**: Top-level hierarchy and constraints connecting the MIPS processor to the FPGA board I/O.
+* **`top.v`**: Top-level hierarchy connecting the MIPS processor to the board I/O. **(You will modify this file in Part 2)**.
 * **`MIPS.v`**: The main processor module. **(You will modify this file in Part 1)**.
 * **`DataMemory.v` / `datamem_h.txt`**: Data memory implementation and its initial hexadecimal content.
-* **`Instruction_Memory.v` / `insmem_h.txt`**: Instruction ROM containing the program op-codes.
-* **`RegisterFile.v` / `reg_half.v` / `reg_half.ngc`**: Register file implementation.
+* **`InstructionMemory.v` / `insmem_h.txt`**: Instruction ROM containing the program op-codes.
+* **`RegisterFile.v` / `reg_half.v`**: Register file implementation.
 * **`ALU.v`**: The Arithmetic Logic Unit (from Lab 5).
-* **`Control_Unit.v`**: Instruction decoding and control signal generation.
+* **`ControlUnit.v`**: Instruction decoding and control signal generation.
+* **`clockdiv.v`**: Divides the board clock down to the 10 MHz internal clock.
 * **`snake_patterns.asm`**: Assembly program that implements the crawling snake pattern.
+* **`sim/`**: Icarus Verilog testbenches — run `./sim/run.sh` to simulate without hardware (`snake`/`aluctrl` for Part 1, `top` for Part 2).
 
 ## Instructions
 
@@ -36,9 +38,29 @@ Extend the processor to communicate with external peripherals by completing the 
 
 ### Step 3: Run the Crawling Snake Program
 1. Ensure all components are wired correctly. The provided `snake_patterns.asm` corresponds to the hexadecimal dumps loaded into the instruction and data memories.
-2. Generate the programming file (bitstream) in Xilinx Vivado.
-3. Program the FPGA board.
-4. You should observe a crawling snake pattern moving across the four digits of the 7-segment display.
+2. Run `./sim/run.sh` (see `sim/`). You should observe the 12 display patterns written to I/O address `0x0` in a repeating cycle — the crawling snake as it would appear across the four digits of the 7-segment display.
 
-### Optional Challenge
-Change the snake's motion pattern or use a switch input to change the direction of the snake's motion. This requires modifying the assembly program and memory configurations.
+## Part 2
+
+## Goals
+* Extend the top-level hierarchy to read two switch inputs and pass them to the processor.
+* Modify the assembly program (`snake_patterns.asm`) to read the 2-bit switch value and adjust the speed of the crawling snake.
+* Optionally, change the snake's crawling pattern or toggle its direction.
+
+## Instructions
+
+### Step 1: Extend the Memory-Mapped I/O
+Part 1 used MMIO to drive the display; Part 2 adds an input register, so the I/O map becomes:
+* **`0x00007FF0`**: (output, 28 bits) Value sent to the 7-segment display.
+* **`0x00007FF4`**: (input, 2 bits) Speed step value (0, 1, 2 or 3) read from the switches.
+
+In `top.v`, create a 2-bit input signal for the switches and drive the 32-bit `IOReadData` from it depending on the `IOAddr` value. Only the 2 least significant bits of `IOReadData` carry the switch state.
+
+### Step 2: Modify the Assembly Program
+Update `snake_patterns.asm` so the delay loop threshold depends on the switch value.
+1. Read the 2-bit value from `0x00007FF4` with `lw`, then scale the loop counter from it so the snake moves faster or slower.
+
+
+### Step 3: Verify in Simulation
+1. Run `./sim/run.sh top` to exercise `top.v` including the `SWITCH` input, and `./sim/run.sh` to re-check everything against the new memory dumps.
+2. Compare the reported display-update interval across `+switch=0` through `+switch=3`. Until the assembly reads `0x7FF4` the interval must stay the same; once Step 2 is done it must change with the switch value.
